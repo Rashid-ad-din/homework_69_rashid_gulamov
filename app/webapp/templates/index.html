@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-gH2yIJqKdNHPEq0n4Mqa/HGKIhSkIHeL5AyhkYV8i59U5AR6csBvApHHNl/vI1Bx" crossorigin="anonymous">
+    <title>Homework 69</title>
+</head>
+<body>
+
+<div class="container pt-3" id="div">
+
+    {% csrf_token %}
+    <p>
+        <input type="text" id="a">
+        <input type="text" id="b">
+    </p>
+    <p>
+        <button id="add" data-url="add/" class="me-3">+</button>
+        <button id="subtract" data-url="subtract/" class="me-3">-</button>
+        <button id="multiply" data-url="multiply/" class="me-3">*</button>
+        <button id="divide" data-url="divide/" class="me-3">/</button>
+    </p>
+
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.1.min.js"
+        integrity="sha256-o88AwQnZB+VDvE9tvIXrMQaPlFFSUTR+nldQm1LuPXQ=" crossorigin="anonymous"></script>
+<script>
+    window.addEventListener('load', function () {
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                let cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    let cookie = jQuery.trim(cookies[i]);
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        let csrftoken = getCookie('csrftoken');
+
+        function csrfSafeMethod(method) {
+            // these HTTP methods do not require CSRF protection
+            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+        }
+
+        $.ajaxSetup({
+            beforeSend: function (xhr, settings) {
+                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                }
+            }
+        });
+
+        let url = 'http://localhost:8000/'
+
+        let add = $('#add');
+        let subtract = $('#subtract');
+        let multiply = $('#multiply');
+        let divide = $('#divide');
+
+        let event = function (evt) {
+            let a = document.getElementById('a');
+            let b = document.getElementById('b');
+
+            let value = $(this).data('url');
+            $.ajax({
+                url: url + value,
+                method: 'post',
+                data: {
+                    "A": a.value,
+                    "B": b.value
+                }
+            }).done(
+                function (data) {
+                    let div = document.getElementById('div');
+
+                    let to_delete = document.getElementById('answerBlock');
+                    if (to_delete) {
+                        div.removeChild(to_delete);
+                    }
+
+                    let answerBlock = document.createElement('p');
+                    answerBlock.setAttribute('id', 'answerBlock');
+
+                    div.appendChild(answerBlock);
+
+                    if (data.answer) {
+                        answerBlock.innerHTML = 'Ответ: ' + data.answer;
+                        answerBlock.style.border = '3px solid black';
+                        answerBlock.style.width = '250px';
+                        answerBlock.style.background = '#7FFF0D';
+                    }
+                    if (data.error) {
+                        answerBlock.innerHTML = "Введены некорректные значения. Введите числа";
+                        answerBlock.style.border = '3px solid black';
+                        answerBlock.style.width = '300px';
+                        answerBlock.style.background = 'red';
+                        }
+                }
+            );
+
+        }
+        add.on('click', event);
+        subtract.on('click', event);
+        multiply.on('click', event);
+        divide.on('click', event);
+    });
+</script>
+
+</body>
+</html>
